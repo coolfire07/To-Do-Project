@@ -1,0 +1,16 @@
+# Сгенерированные файлы
+target/
+bin/
+
+# Файлы конфигурации IDE (IntelliJ IDEA)
+.idea/
+
+# Файлы конфигурации Eclipse
+.project
+.classpath
+
+# Логи
+*.log
+
+# Конфиденциальные файлы
+*.properties
