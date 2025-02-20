@@ -1,0 +1,43 @@
+<div class="container">
+  <form [formGroup]="taskForm" (ngSubmit)="onSubmit()">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>{{ task ? 'Edit Task' : 'Add Task' }}</mat-card-title>
+      </mat-card-header>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Task Name</mat-label>
+          <input matInput id="taskName" formControlName="taskName" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Description</mat-label>
+          <input matInput id="description" formControlName="description" required>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Completion Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="completionDate">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Status</mat-label>
+          <mat-select id="status" formControlName="status">
+            <mat-option value="TO_DO">To Do</mat-option>
+            <mat-option value="IN_PROCESS">In Process</mat-option>
+            <mat-option value="COMPLETED">Completed</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <mat-card-actions>
+        <button mat-raised-button color="primary" type="submit">
+          {{ task ? 'Update Task' : 'Add Task' }}
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </form>
+</div>

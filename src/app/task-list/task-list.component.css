@@ -1,0 +1,73 @@
+.container {
+  display: flex;
+  justify-content: start;
+  align-items: start;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+mat-card {
+  display: flex;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  flex-direction: row;
+  width: 100%;
+  margin: 10px 0;
+  background-color: white;
+}
+
+mat-card-header {
+  margin-top: 10px;
+  margin-right: 0;
+  /*margin-right: 33px;*/
+  width: 121px;
+}
+
+mat-card-title {
+  font-weight: bold;
+  color: #02081b;
+  font-size: 25px;
+  width: 121px;
+}
+
+mat-form-field {
+  flex: 1;
+  width: 280px;
+  padding-top: 15px;
+  margin-right: 10px;
+}
+
+.form-row {
+  min-width: 1160px;
+}
+
+.task-list {
+  display: grid;
+  width: 100%;
+  gap: 10px;
+  margin-top: 5px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+
+}
+
+.reset {
+  border-radius: 5px;
+  margin-bottom: 6px;
+  font-size: 18px;
+  cursor: pointer;
+  width: 155px;
+  margin-left: 12px;
+  margin-top: 23px;
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+

@@ -1,0 +1,36 @@
+ <div class="registration">
+    <mat-card class="form-box" id="register-form">
+      <mat-card-header>
+        <mat-card-title>Register</mat-card-title>
+      </mat-card-header>
+
+      <mat-card-content>
+        <form (ngSubmit)="register()" [formGroup]="registrationForm">
+          <mat-form-field class="form-group" appearance="outline">
+            <mat-label>Email</mat-label>
+            <input matInput #usernameInput type="email" id="register-email" formControlName="username" placeholder="Enter your email" required>
+          </mat-form-field>
+
+          <mat-form-field class="form-group" appearance="outline">
+            <mat-label>Password</mat-label>
+            <input matInput #passwordInput type="password" id="password" formControlName="password" placeholder="Enter your password" required>
+          </mat-form-field>
+
+          <mat-form-field class="form-group" appearance="outline">
+            <mat-label>Confirm Password</mat-label>
+            <input matInput #confirmPasswordInput type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password" required>
+          </mat-form-field>
+
+          <div class="form-group">
+            <button mat-raised-button color="primary" type="submit">Register</button>
+          </div>
+        </form>
+      </mat-card-content>
+
+      <mat-card-footer>
+        <div class="toogle-btn">
+          <a href="javascript:void(0)" (click)="toggleForm()">Already have an account? Login</a>
+        </div>
+      </mat-card-footer>
+    </mat-card>
+ </div>

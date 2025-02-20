@@ -1,0 +1,61 @@
+<div class="container">
+  <app-task-form (taskSaved)="onTaskSaved($event)" [task]="selectedTask"></app-task-form>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Filters</mat-card-title>
+    </mat-card-header>
+    <div class="form-row">
+      <mat-form-field appearance="outline">
+        <mat-label>Sort by:</mat-label>
+        <mat-select [(ngModel)]="filters.sort" (selectionChange)="fetchTasks()">
+          <mat-option value="">Default</mat-option>
+          <mat-option value="createdDate">Creation Date</mat-option>
+          <mat-option value="completionDate">Completion Date</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Status</mat-label>
+        <mat-select [(ngModel)]="filters.status" (selectionChange)="fetchTasks()" appearance="outline">
+          <mat-option value="">All</mat-option>
+          <mat-option value="TO_DO">To do</mat-option>
+          <mat-option value="IN_PROCESS">In process</mat-option>
+          <mat-option value="COMPLETED">Completed</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Completion Date</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="filters.date" (dateChange)="fetchTasks()">
+        <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Task Name</mat-label>
+        <input matInput type="text" [(ngModel)]="filters.keyword" (input)="fetchTasks()" placeholder="Search by name">
+      </mat-form-field>
+    </div>
+    <button mat-raised-button class="reset" color="primary" type="submit" (click)="resetFilters()">Reset</button>
+  </mat-card>
+
+  <div class="task-list">
+    <mat-card *ngFor="let task of tasks" class="task-card">
+      <div class="card">
+        <mat-card-header>
+          <mat-card-title>{{ task.taskName }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="task-description">{{ task.description }}</p>
+          <p class="task-date">Due: {{ task.completionDate || 'N/A' }}</p>
+          <p class="task-status">{{ task.status }}</p>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button (click)="task.id ? editTask(task.id) : null">Edit</button>
+          <button mat-button (click)="task.id ? deleteTask(task.id) : null">Delete</button>
+        </mat-card-actions>
+      </div>
+    </mat-card>
+  </div>
+</div>
