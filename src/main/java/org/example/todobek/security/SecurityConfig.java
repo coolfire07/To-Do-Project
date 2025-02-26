@@ -2,7 +2,6 @@ package org.example.todobek.security;
 
 import org.example.todobek.jwt.JwtFilter;
 import org.example.todobek.jwt.JwtUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -23,8 +22,11 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
+
+    public SecurityConfig(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Bean
     public JwtFilter jwtFilter(JwtUtil jwtUtil) {

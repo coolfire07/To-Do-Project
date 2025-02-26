@@ -1,6 +1,7 @@
 package org.example.todobek.services;
 
 import org.example.todobek.entities.User;
+import org.example.todobek.exceptions.UserException;
 import org.example.todobek.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,7 @@ public class UserService {
 
     public User register(String username, String password) {
         if (userRepository.findByUsername(username).isPresent()) {
-            throw new RuntimeException("Пользователь уже существует!");
+            throw new UserException("Пользователь уже существует!");
         }
         User user = new User();
         user.setUsername(username);

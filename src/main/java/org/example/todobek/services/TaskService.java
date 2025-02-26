@@ -4,7 +4,6 @@ import org.example.todobek.entities.Task;
 import org.example.todobek.entities.TaskStatus;
 import org.example.todobek.repositories.TaskRepository;
 import org.example.todobek.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -13,11 +12,13 @@ import java.util.Optional;
 
 @Service
 public class TaskService {
-    @Autowired
-    private TaskRepository taskRepository;
+    private final TaskRepository taskRepository;
+    private final UserService userService;
 
-    @Autowired
-    private UserRepository userRepository;
+    public TaskService(TaskRepository repository, UserService userService) {
+        this.taskRepository = repository;
+        this.userService = userService;
+    }
 
     public List<Task> getTasks(TaskStatus status, LocalDate completionDate, String keyword, Long userId, LocalDate creationDate, String sortBy) {
         return taskRepository.findAll().stream()

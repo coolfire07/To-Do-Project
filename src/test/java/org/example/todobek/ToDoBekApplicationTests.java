@@ -8,6 +8,6 @@ class ToDoBekApplicationTests {
 
     @Test
     void contextLoads() {
+        throw new UnsupportedOperationException("Тест еще не реализован");
     }
-
 }
