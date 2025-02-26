@@ -10,9 +10,6 @@ import org.example.todobek.services.TaskService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,9 +24,27 @@ public class TaskController {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String BEARER_PREFIX = "Bearer ";
 
-    public TaskController (TaskService taskService, UserRepository userRepository) {
+    public TaskController(TaskService taskService, UserRepository userRepository) {
         this.taskService = taskService;
         this.userRepository = userRepository;
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
+        if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
+            return authorization.substring(BEARER_PREFIX.length());
+        }
+        return null;
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest request) {
+        String token = extractToken(request);
+        if (token == null || !JwtUtil.validateToken(token, JwtUtil.extractUsername(token))) {
+            return null; // Или выбросьте исключение
+        }
+
+        String username = JwtUtil.extractUsername(token);
+        return userRepository.findByUsername(username).orElse(null);
     }
 
     @GetMapping
@@ -45,65 +60,28 @@ public class TaskController {
             completionDate = LocalDate.parse(date);
         }
 
-        String authorization = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
-            String token = authorization.substring(7);
-            String username = JwtUtil.extractUsername(token);
-
-            if (!JwtUtil.validateToken(token, JwtUtil.extractUsername(token))) {
-                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-            }
-
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-
-            try {
-                Optional<User> userOptional = userRepository.findByUsername(username);
-                if (userOptional.isEmpty()) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-                }
-                User user = userOptional.get();
-                Long userId = user.getId();
-
-                if (userId == null) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
-                }
-                List<Task> tasks = taskService.getTasks(status, completionDate, keyword, userId, creationDate, sortBy);
-                return ResponseEntity.ok(tasks);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-            }
-        } else {
+        User user = getAuthenticatedUser(request);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
+        }
+
+        try {
+            Long userId = user.getId();
+            List<Task> tasks = taskService.getTasks(status, completionDate, keyword, userId, creationDate, sortBy);
+            return ResponseEntity.ok(tasks);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
     @PostMapping
     public ResponseEntity<Task> createTask(@RequestBody Task task, HttpServletRequest request) {
-        String authorization = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
+        User user = getAuthenticatedUser(request);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String token = authorization.substring(7);
-        String username = JwtUtil.extractUsername(token);
-
-        if (!JwtUtil.validateToken(token, username)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        User user = userOptional.get();
         task.setUser(user);
         Task savedTask = taskService.saveTask(task);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedTask);
@@ -111,33 +89,17 @@ public class TaskController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Task> getTaskById(@PathVariable Long id, HttpServletRequest request) {
-        String authorization = request.getHeader(AUTHORIZATION_HEADER);
-
-        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
+        User user = getAuthenticatedUser(request);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String token = authorization.substring(7);
-        String username = JwtUtil.extractUsername(token);
-
-        if (!JwtUtil.validateToken(token, username)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-        User user = userOptional.get();
         Optional<Task> taskOptional = taskService.getTaskById(id);
-
         if (taskOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         Task task = taskOptional.get();
-
         if (!task.getUser().getId().equals(user.getId())) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -147,20 +109,11 @@ public class TaskController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask, HttpServletRequest request) {
-        String authorization = request.getHeader(AUTHORIZATION_HEADER);
-        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
+        User user = getAuthenticatedUser(request);
+        if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        String token = authorization.substring(7);
-        String username = JwtUtil.extractUsername(token);
-
-        Optional<User> userOptional = userRepository.findByUsername(username);
-        if (userOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        User user = userOptional.get();
         Optional<Task> taskOptional = taskService.getTaskById(id);
         if (taskOptional.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -190,5 +143,4 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", "Task not found."));
         }
     }
-
 }
