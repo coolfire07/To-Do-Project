@@ -4,7 +4,8 @@ import org.example.todobek.dto.RegisterRequest;
 import org.example.todobek.entities.User;
 import org.example.todobek.jwt.JwtUtil;
 import org.example.todobek.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,20 +17,22 @@ import java.util.Optional;
 @RequestMapping("/api/users")
 @CrossOrigin(origins = "http://localhost:4200")
 public class UserController {
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User loginDetails) {
+    public ResponseEntity<Object> login(@RequestBody User loginDetails) {
         Optional<User> userOptional = userRepository.findByUsername(loginDetails.getUsername());
 
         if (userOptional.isPresent() && passwordEncoder.matches(loginDetails.getPassword(), userOptional.get().getPassword())) {
             String token = JwtUtil.generateToken(userOptional.get().getUsername());
-            System.out.println("User logged in: " + loginDetails.getUsername());
+            logger.info("User logged in: {}", loginDetails.getUsername());
 
             return ResponseEntity.ok("{\"token\": \"" + token + "\"}");
         }
@@ -38,17 +41,17 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        System.out.println("Пришел запрос на регистрацию: " + registerRequest.getUsername());
+    public ResponseEntity<Object> register(@RequestBody RegisterRequest registerRequest) {
+        logger.info("Пришел запрос на регистрацию: {}", registerRequest.getUsername());
 
         if (!registerRequest.getPassword().equals(registerRequest.getConfirmPassword())) {
-            System.out.println("Ошибка: пароли не совпадают");
+            logger.error("Ошибка: пароли не совпадают");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"Passwords do not match\"}");
         }
 
         Optional<User> existingUser = userRepository.findByUsername(registerRequest.getUsername());
         if (existingUser.isPresent()) {
-            System.out.println("Ошибка: пользователь уже существует");
+            logger.error("Ошибка: пользователь уже существует");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("{\"message\": \"Username already taken\"}");
         }
 
@@ -57,7 +60,7 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
 
         userRepository.save(user);
-        System.out.println("Регистрация успешна");
+        logger.info("Регистрация успешна");
 
         return ResponseEntity.status(HttpStatus.CREATED).body("{\"message\": \"User created successfully\"}");
     }
