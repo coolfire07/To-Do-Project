@@ -7,7 +7,6 @@ import org.example.todobek.entities.User;
 import org.example.todobek.jwt.JwtUtil;
 import org.example.todobek.repositories.UserRepository;
 import org.example.todobek.services.TaskService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,18 +21,18 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/tasks")
 public class TaskController {
+    private final TaskService taskService;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
 
-    @Autowired
-    private TaskService taskService;
-
-    @Autowired
-    private UserRepository userRepository;
+    public TaskController (TaskService taskService, UserRepository userRepository) {
+        this.taskService = taskService;
+        this.userRepository = userRepository;
+    }
 
     @GetMapping
-    @ResponseBody
     public ResponseEntity<List<Task>> getTasksJson(@RequestParam(required = false) TaskStatus status,
                                                    @RequestParam(required = false) String date,
                                                    @RequestParam(required = false) String keyword,
@@ -46,13 +45,13 @@ public class TaskController {
             completionDate = LocalDate.parse(date);
         }
 
-        String authorization = request.getHeader("Authorization");
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authorization != null && authorization.startsWith("Bearer ")) {
+        if (authorization != null && authorization.startsWith(BEARER_PREFIX)) {
             String token = authorization.substring(7);
-            String username = jwtUtil.extractUsername(token);
+            String username = JwtUtil.extractUsername(token);
 
-            if (!jwtUtil.validateToken(token, jwtUtil.extractUsername(token))) {
+            if (!JwtUtil.validateToken(token, JwtUtil.extractUsername(token))) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body(null);
             }
 
@@ -85,17 +84,17 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody Task task, HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
+    public ResponseEntity<Task> createTask(@RequestBody Task task, HttpServletRequest request) {
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String token = authorization.substring(7);
-        String username = jwtUtil.extractUsername(token);
+        String username = JwtUtil.extractUsername(token);
 
-        if (!jwtUtil.validateToken(token, username)) {
+        if (!JwtUtil.validateToken(token, username)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -111,17 +110,17 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getTaskById(@PathVariable Long id, HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
+    public ResponseEntity<Task> getTaskById(@PathVariable Long id, HttpServletRequest request) {
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
 
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String token = authorization.substring(7);
-        String username = jwtUtil.extractUsername(token);
+        String username = JwtUtil.extractUsername(token);
 
-        if (!jwtUtil.validateToken(token, username)) {
+        if (!JwtUtil.validateToken(token, username)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
@@ -148,13 +147,13 @@ public class TaskController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask, HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
+        String authorization = request.getHeader(AUTHORIZATION_HEADER);
+        if (authorization == null || !authorization.startsWith(BEARER_PREFIX)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
         String token = authorization.substring(7);
-        String username = jwtUtil.extractUsername(token);
+        String username = JwtUtil.extractUsername(token);
 
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isEmpty()) {
