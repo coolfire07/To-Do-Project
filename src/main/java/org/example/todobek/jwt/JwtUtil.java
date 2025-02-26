@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 
 @Component
 public class JwtUtil {
+    private JwtUtil() { }
     private static final SecretKey secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);  // Генерация безопасного ключа
 
     public static String generateToken(String username) {

@@ -26,7 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final Logger logger = LoggerFactory.getLogger(JwtFilter.class);
+    private static final Logger jwtLogger = LoggerFactory.getLogger(JwtFilter.class);
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -39,22 +39,22 @@ public class JwtFilter extends OncePerRequestFilter {
             try {
                 username = JwtUtil.extractUsername(token);
             } catch (ExpiredJwtException e) {
-                logger.error("Token expired", e);
+                jwtLogger.error("Token expired", e);
             } catch (Exception e) {
-                logger.error("Invalid token", e);
+                jwtLogger.error("Invalid token", e);
             }
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                if (jwtUtil.validateToken(token, username)) {
+                if (JwtUtil.validateToken(token, username)) {
                     Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    logger.info("Authenticated user: {}", username);
+                    jwtLogger.info("Authenticated user: {}", username);
                 }
             } else {
-                logger.warn("Token validation failed for username: {}", username);
+                jwtLogger.warn("Token validation failed for username: {}", username);
             }
         } else {
-            logger.warn("Authorization header is missing or malformed");
+            jwtLogger.warn("Authorization header is missing or malformed");
         }
 
         chain.doFilter(request, response);
