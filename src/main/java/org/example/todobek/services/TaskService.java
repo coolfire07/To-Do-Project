@@ -22,6 +22,9 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
 
+    private static final String CREATION_DATE = "creationDate";
+    private static final String COMPLETION_DATE = "completionDate";
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -43,10 +46,10 @@ public class TaskService {
             predicates.add(criteriaBuilder.equal(taskRoot.get("status"), status));
         }
         if (completionDate != null) {
-            predicates.add(criteriaBuilder.equal(taskRoot.get("completionDate"), completionDate));
+            predicates.add(criteriaBuilder.equal(taskRoot.get(COMPLETION_DATE), completionDate));
         }
         if (creationDate != null) {
-            predicates.add(criteriaBuilder.equal(taskRoot.get("creationDate"), creationDate));
+            predicates.add(criteriaBuilder.equal(taskRoot.get(CREATION_DATE), creationDate));
         }
         if (keyword != null) {
             predicates.add(criteriaBuilder.like(criteriaBuilder.lower(taskRoot.get("taskName")), "%" + keyword.toLowerCase() + "%"));
@@ -54,10 +57,10 @@ public class TaskService {
 
         criteriaQuery.select(taskRoot).where(predicates.toArray(new Predicate[0]));
 
-        if ("creationDate".equals(sortBy)) {
-            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get("creationDate")));
-        } else if ("completionDate".equals(sortBy)) {
-            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get("completionDate")));
+        if (CREATION_DATE.equals(sortBy)) {
+            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get(CREATION_DATE)));
+        } else if (COMPLETION_DATE.equals(sortBy)) {
+            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get(COMPLETION_DATE)));
         }
 
         TypedQuery<Task> query = entityManager.createQuery(criteriaQuery);
