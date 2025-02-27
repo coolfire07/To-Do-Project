@@ -1,5 +1,6 @@
 package org.example.todobek.controllers;
 
+import org.example.todobek.dto.LoginRequest;
 import org.example.todobek.dto.RegisterRequest;
 import org.example.todobek.entities.User;
 import org.example.todobek.jwt.JwtUtil;
@@ -27,12 +28,12 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody User loginDetails) {
-        Optional<User> userOptional = userRepository.findByUsername(loginDetails.getUsername());
+    public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest) {
+        Optional<User> userOptional = userRepository.findByUsername(loginRequest.getUsername());
 
-        if (userOptional.isPresent() && passwordEncoder.matches(loginDetails.getPassword(), userOptional.get().getPassword())) {
+        if (userOptional.isPresent() && passwordEncoder.matches(loginRequest.getPassword(), userOptional.get().getPassword())) {
             String token = JwtUtil.generateToken(userOptional.get().getUsername());
-            logger.info("User logged in: {}", loginDetails.getUsername());
+            logger.info("User logged in: {}", loginRequest.getUsername());
 
             return ResponseEntity.ok("{\"token\": \"" + token + "\"}");
         }
