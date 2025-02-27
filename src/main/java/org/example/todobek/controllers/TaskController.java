@@ -114,23 +114,12 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
-        Optional<Task> taskOptional = taskService.getTaskById(id);
-        if (taskOptional.isEmpty()) {
+        Task updatedExistingTask = taskService.updateTask(id, updatedTask);
+        if (updatedExistingTask == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        Task existingTask = taskOptional.get();
-        if (!existingTask.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        existingTask.setTaskName(updatedTask.getTaskName());
-        existingTask.setDescription(updatedTask.getDescription());
-        existingTask.setStatus(updatedTask.getStatus());
-        existingTask.setCompletionDate(updatedTask.getCompletionDate());
-
-        Task savedTask = taskService.saveTask(existingTask);
-        return ResponseEntity.ok(savedTask);
+        return ResponseEntity.ok(updatedExistingTask);
     }
 
     @DeleteMapping("/{id}")
