@@ -1,12 +1,19 @@
 package org.example.todobek.services;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.example.todobek.entities.Task;
 import org.example.todobek.entities.TaskStatus;
 import org.example.todobek.repositories.TaskRepository;
-import org.example.todobek.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.TypedQuery;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,27 +22,46 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final UserService userService;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     public TaskService(TaskRepository repository, UserService userService) {
         this.taskRepository = repository;
         this.userService = userService;
     }
 
     public List<Task> getTasks(TaskStatus status, LocalDate completionDate, String keyword, Long userId, LocalDate creationDate, String sortBy) {
-        return taskRepository.findAll().stream()
-                .filter(task -> task.getUser().getId().equals(userId))
-                .filter(task -> status == null || task.getStatus() == status)
-                .filter(task -> completionDate == null || task.getCompletionDate() != null && task.getCompletionDate().equals(completionDate))
-                .filter(task -> creationDate == null || task.getCreationDate() != null && task.getCreationDate().equals(creationDate))
-                .filter(task -> keyword == null || task.getTaskName().toLowerCase().contains(keyword.toLowerCase()))
-                .sorted((task1, task2) -> {
-                    if ("creationDate".equals(sortBy)) {
-                        return task1.getCreationDate().compareTo(task2.getCreationDate());
-                    } else if ("completionDate".equals(sortBy)) {
-                        return task1.getCompletionDate().compareTo(task2.getCompletionDate());
-                    }
-                    return 0;
-                })
-                .toList();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<Task> criteriaQuery = criteriaBuilder.createQuery(Task.class);
+        Root<Task> taskRoot = criteriaQuery.from(Task.class);
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        predicates.add(criteriaBuilder.equal(taskRoot.get("user").get("id"), userId));
+
+        if (status != null) {
+            predicates.add(criteriaBuilder.equal(taskRoot.get("status"), status));
+        }
+        if (completionDate != null) {
+            predicates.add(criteriaBuilder.equal(taskRoot.get("completionDate"), completionDate));
+        }
+        if (creationDate != null) {
+            predicates.add(criteriaBuilder.equal(taskRoot.get("creationDate"), creationDate));
+        }
+        if (keyword != null) {
+            predicates.add(criteriaBuilder.like(criteriaBuilder.lower(taskRoot.get("taskName")), "%" + keyword.toLowerCase() + "%"));
+        }
+
+        criteriaQuery.select(taskRoot).where(predicates.toArray(new Predicate[0]));
+
+        if ("creationDate".equals(sortBy)) {
+            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get("creationDate")));
+        } else if ("completionDate".equals(sortBy)) {
+            criteriaQuery.orderBy(criteriaBuilder.asc(taskRoot.get("completionDate")));
+        }
+
+        TypedQuery<Task> query = entityManager.createQuery(criteriaQuery);
+        return query.getResultList();
     }
 
     public Task saveTask(Task task) {
