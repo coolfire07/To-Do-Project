@@ -2,7 +2,6 @@ package org.example.todobek.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.antlr.v4.runtime.misc.NotNull;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDate;
@@ -19,19 +18,16 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull
-    @Column(name = "taskname")
+    @Column(name = "taskname", nullable=false)
     private String taskName;
 
-    @NotNull
-    @Column(name = "description")
+    @Column(name = "description", nullable=false)
     private String description;
 
-    @NotNull
-    @Column(name = "completiondate")
+    @Column(name = "completiondate", nullable=false)
     private LocalDate completionDate;
 
-    @NotNull
+    @Column(name = "status", nullable = false)
     @Enumerated(EnumType.STRING)
     private TaskStatus status;
 
