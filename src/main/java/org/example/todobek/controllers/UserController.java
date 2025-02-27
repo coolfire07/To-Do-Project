@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin
 public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
     private final UserRepository userRepository;
