@@ -1,15 +1,22 @@
 package org.example.todobek.entities;
 
+import lombok.Getter;
+
+@Getter
+
 public enum TaskStatus {
-    TO_DO, IN_PROCESS, COMPLETED;
+    TO_DO("To do"),
+    IN_PROCESS("In process"),
+    COMPLETED("Completed");
+
+    private final String displayName;
+
+    TaskStatus(String displayName) {
+        this.displayName = displayName;
+    }
 
     @Override
     public String toString() {
-        switch(this) {
-            case IN_PROCESS: return "In process";
-            case TO_DO: return "To do";
-            case COMPLETED: return "Completed";
-            default: return super.toString();
-        }
+        return displayName;
     }
 }

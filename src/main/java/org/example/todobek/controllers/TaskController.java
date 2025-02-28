@@ -48,7 +48,7 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Task>> getTasksJson(@RequestParam(required = false) TaskStatus status,
+    public ResponseEntity<List<Map<String, Object>>> getTasksJson(@RequestParam(required = false) TaskStatus status,
                                                    @RequestParam(required = false) String date,
                                                    @RequestParam(required = false) String keyword,
                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate creationDate,
@@ -68,7 +68,21 @@ public class TaskController {
         try {
             Long userId = user.getId();
             List<Task> tasks = taskService.getTasks(status, completionDate, keyword, userId, creationDate, sortBy);
-            return ResponseEntity.ok(tasks);
+
+            List<Map<String, Object>> responseTasks = tasks.stream()
+                    .map(task -> {
+                        Map<String, Object> taskMap = new HashMap<>();
+                        taskMap.put("id", task.getId());
+                        taskMap.put("taskName", task.getTaskName());
+                        taskMap.put("description", task.getDescription());
+                        taskMap.put("completionDate", task.getCompletionDate());
+                        taskMap.put("status", task.getStatus().getDisplayName()); // Преобразование статуса в строку
+                        taskMap.put("creationDate", task.getCreationDate());
+                        return taskMap;
+                    })
+                    .toList();
+
+            return ResponseEntity.ok(responseTasks);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
