@@ -70,16 +70,7 @@ public class TaskController {
             List<Task> tasks = taskService.getTasks(status, completionDate, keyword, userId, creationDate, sortBy);
 
             List<Map<String, Object>> responseTasks = tasks.stream()
-                    .map(task -> {
-                        Map<String, Object> taskMap = new HashMap<>();
-                        taskMap.put("id", task.getId());
-                        taskMap.put("taskName", task.getTaskName());
-                        taskMap.put("description", task.getDescription());
-                        taskMap.put("completionDate", task.getCompletionDate());
-                        taskMap.put("status", task.getStatus().getDisplayName()); // Преобразование статуса в строку
-                        taskMap.put("creationDate", task.getCreationDate());
-                        return taskMap;
-                    })
+                    .map(this::createResponseTask)
                     .toList();
 
             return ResponseEntity.ok(responseTasks);
@@ -90,7 +81,7 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> createTask(@RequestBody Task task, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> createTask(@RequestBody Task task, HttpServletRequest request) {
         User user = getAuthenticatedUser(request);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -98,7 +89,9 @@ public class TaskController {
 
         task.setUser(user);
         Task savedTask = taskService.saveTask(task);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedTask);
+
+        Map<String, Object> responseTask = createResponseTask(savedTask);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseTask);
     }
 
     @GetMapping("/{id}")
@@ -122,7 +115,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable Long id, @RequestBody Task updatedTask, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable Long id, @RequestBody Task updatedTask, HttpServletRequest request) {
         User user = getAuthenticatedUser(request);
         if (user == null) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -133,7 +126,8 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
-        return ResponseEntity.ok(updatedExistingTask);
+        Map<String, Object> responseTask = createResponseTask(updatedExistingTask);
+        return ResponseEntity.ok(responseTask);
     }
 
     @DeleteMapping("/{id}")
@@ -145,5 +139,16 @@ public class TaskController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Collections.singletonMap("message", "Task not found."));
         }
+    }
+
+    private Map<String, Object> createResponseTask(Task task) {
+        Map<String, Object> taskMap = new HashMap<>();
+        taskMap.put("id", task.getId());
+        taskMap.put("taskName", task.getTaskName());
+        taskMap.put("description", task.getDescription());
+        taskMap.put("completionDate", task.getCompletionDate());
+        taskMap.put("status", task.getStatus().getDisplayName());
+        taskMap.put("creationDate", task.getCreationDate());
+        return taskMap;
     }
 }
